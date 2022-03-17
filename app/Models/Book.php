@@ -9,6 +9,7 @@ class Book extends Model
 {
     use HasFactory;
 
+    // Mendefine bahwa model Book, memiliki kolom yang dapat diisi dengan kolom dibawah
     protected $fillable = [
         'title',
         'description'
