@@ -5,20 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Book extends Model
+class Author extends Model
 {
     use HasFactory;
 
     // Mendefine bahwa model Book, memiliki kolom yang dapat diisi dengan kolom dibawah
     protected $fillable = [
-        'author_id',
-        'title',
+        'name',
         'description'
     ];
 
-    public function author()
+    public function book()
     {
-        // ( MODEL RELASI, PRIMARY KEY RELASI, FOREIGN KEY LOCAL)
-        return $this->hasOne(Author::class, 'id', 'author_id');
+        // ( MODEL RELASI)
+        return $this->hasMany(Book::class);
     }
 }
