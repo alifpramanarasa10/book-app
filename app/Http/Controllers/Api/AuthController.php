@@ -32,6 +32,7 @@ class AuthController extends Controller
          ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
+        $user->sendEmailVerificationNotification();
 
         return response()
             ->json([
@@ -73,6 +74,36 @@ class AuthController extends Controller
         return [
             'code' => 200,
             'message' => 'Success logout from system'
+        ];
+    }
+
+    public function verify($user_id, Request $request) {
+        if (!$request->hasValidSignature()) {
+            return response()->json(["msg" => "Invalid/Expired url provided."], 401);
+        }
+    
+        $user = User::findOrFail($user_id);
+    
+        if (!$user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
+    
+        return [
+            'code' => 200,
+            'message' => 'Success verify'
+        ];
+    }
+    
+    public function resend() {
+        if (auth()->user()->hasVerifiedEmail()) {
+            return response()->json(["msg" => "Email already verified."], 400);
+        }
+    
+        auth()->user()->sendEmailVerificationNotification();
+
+        return [
+            'code' => 200,
+            'message' => 'Success resend email'
         ];
     }
 }
