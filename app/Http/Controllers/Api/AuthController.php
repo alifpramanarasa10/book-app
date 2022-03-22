@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
-use Auth;
-use Validator;
+use Illuminate\Http\Request;
 
+use Validator;
+use Auth;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -20,59 +20,103 @@ class AuthController extends Controller
             'password' => 'required',
             'password_confirmation' => 'required|same:password',
         ]);
-   
-        if($validator->fails()){
-            return response()->json($validator->errors());       
+
+        if($validator->fails()) 
+        {
+            return response()->json($validator->errors());
         }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password)
-         ]);
+            'password' => Hash::make($request->password),
+            'phone' => $request->phone,
+        ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken($request->email)->plainTextToken;
+        $user->sendEmailVerificationNotification();
 
-        return response()
-            ->json([
-                'code' => 200,
-                'data' => $user,
-                'access_token' => $token, 
-                'token_type' => 'Bearer'
-            ]);
+        return response()->json([
+            'code' => 200,
+            'data' => $user,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'message' => 'Success create user'
+        ]);
     }
 
     public function login(Request $request)
     {
-        if (!Auth::attempt($request->only('email', 'password')))
+        if(!Auth::attempt($request->only('email','password')))
         {
-            return response()
-                ->json([
-                    'code' => 401,
-                    'message' => 'Unauthorized'
-                ], 401);
+            return response()->json([
+                'code' => 422,
+                'message' => 'Wrong username or password!'
+            ], 422);
         }
 
         $user = User::where('email', $request['email'])->firstOrFail();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken($request->email)->plainTextToken;
 
-        return response()
-            ->json([
-                'code' => 200,
-                'user' => $user,
-                'access_token' => $token, 
-                'token_type' => 'Bearer'
-            ]);
+        return response()->json([
+            'code' => 200,
+            'data' => $user,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'message' => 'Success login to system'
+        ]);
     }
 
     public function logout()
     {
         auth()->user()->tokens()->delete();
 
-        return [
+        return response()->json([
             'code' => 200,
             'message' => 'Success logout from system'
-        ];
+        ]);
+    }
+
+    public function verify($userId, Request $request)
+    {
+        if(!$request->hasValidSignature())
+        {
+            return response()->json([
+                'code' => 422,
+                'message' => "Invalid signature"
+            ], 422);
+        }
+
+        $user = User::findOrFail($userId);
+
+        if (!$user->hasVerifiedEmail())
+        {
+            $user->markEmailAsVerified();
+        }
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'Success verify user'
+        ]);
+    }
+
+    public function resend(Request $request)
+    {      
+        $user = User::find($request->id);
+        if($user->hasVerifiedEmail())
+        {
+            return response()->json([
+                'code' => 422,
+                'message' => 'Email already verified'
+            ]);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'Success resend email'
+        ]);
     }
 }
