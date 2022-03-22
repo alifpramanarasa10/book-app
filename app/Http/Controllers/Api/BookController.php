@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseController;
 
 use App\Models\Book;
 
-class BookController extends Controller
+class BookController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -17,13 +17,8 @@ class BookController extends Controller
     public function index()
     {
         $book = Book::with('author')->get();
-
-        return response()->json([
-            'code' => 200,
-            'status' => true,
-            'message' => "Success get all book",
-            'data' => $book
-        ]);
+        
+        return $this->sendResponse($book, "success get all book");
     }
 
     /**
@@ -50,12 +45,7 @@ class BookController extends Controller
             'description' => $request->description
         ]);
 
-        return response()->json([
-            'code' => 200,
-            'status' => true,
-            'message' => "Success create book",
-            'data' => $book
-        ]);
+        return $this->sendResponse($book, "success create book");
     }
 
     /**
@@ -68,12 +58,7 @@ class BookController extends Controller
     {   
         $Book = Book::where('id', $book->id)->with('author')->first();
 
-        return response()->json([
-            'code' => 200,
-            'status' => true,
-            'message' => "Success get book with id = ".$Book->id,
-            'data' => $Book
-        ]);
+        return $this->sendResponse($book, "Success get book with id = ".$Book->id);
     }
 
     /**
@@ -102,12 +87,7 @@ class BookController extends Controller
             'description' => $request->description
         ]);
 
-        return response()->json([
-            'code' => 200,
-            'status' => true,
-            'message' => "Success update book with id = ".$book->id,
-            'data' => $book
-        ]);
+        return $this->sendResponse($book, "Success update book with id = ".$book->id);
     }
 
     /**
@@ -120,11 +100,6 @@ class BookController extends Controller
     {
         $book->delete();
 
-        return response()->json([
-            'code' => 200,
-            'status' => true,
-            'message' => "Success delete book with id = ".$book->id,
-            'data' => ""
-        ]);
+        return $this->sendResponse("", "Success delete book with id = ".$book->id);
     }
 }
