@@ -16,14 +16,23 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [App\Http\Controllers\Api\AuthController::class, 'register']);
 Route::post('/login', [App\Http\Controllers\Api\AuthController::class, 'login']);
 
+Route::get('email/verify/{id}', [App\Http\Controllers\Api\AuthController::class, 'verify'])->name('verification.verify');
+Route::post('email/resend', [App\Http\Controllers\Api\AuthController::class, 'resend'])->name('verification.resend');
 
-Route::group(['middleware' => ['auth:sanctum']], function () {
-    Route::get('/profile', function() {
-        return auth()->user();
-    });
+Route::group(['middleware' => ['auth:sanctum','verified']], function(){
 
     Route::apiResource('/book', App\Http\Controllers\Api\BookController::class);
     Route::apiResource('/author', App\Http\Controllers\Api\AuthorController::class);
-
-    Route::post('/logout', [App\Http\Controllers\API\AuthController::class, 'logout']);
+  
+    Route::post('/logout', [App\Http\Controllers\Api\AuthController::class, 'logout']);
 });
+
+Route::get('/public/post', [App\Http\Controllers\Api\FetchController::class, 'getData']);
+Route::get('/public/post/{id}', [App\Http\Controllers\Api\FetchController::class, 'showData']);
+Route::post('/public/post', [App\Http\Controllers\Api\FetchController::class, 'createData']);
+Route::put('/public/post/{id}', [App\Http\Controllers\Api\FetchController::class, 'updateData']);
+Route::patch('/public/post/{id}', [App\Http\Controllers\Api\FetchController::class, 'patchData']);
+Route::delete('/public/post/{id}', [App\Http\Controllers\Api\FetchController::class, 'deleteData']);
+Route::get('/public/post?userId={id}', [App\Http\Controllers\Api\FetchController::class, 'filteringData']);
+Route::get('/public/post/{id}/comments', [App\Http\Controllers\Api\FetchController::class, 'nestedData']);
+Route::get('/public/users/{id}/todos', [App\Http\Controllers\Api\FetchController::class, 'userTodos']);
