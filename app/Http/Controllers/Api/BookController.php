@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\BaseController;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\Book;
 
@@ -39,11 +40,34 @@ class BookController extends BaseController
      */
     public function store(Request $request)
     {
-        $book = Book::create([
-            'author_id' => $request->author_id,
-            'title' => $request->title,
-            'description' => $request->description
-        ]);
+        if ($file = $request->file('image')) {
+            $uploadFolder = 'books';
+
+            $image_uploaded_path = $file->store($uploadFolder);
+
+            $book = Book::create([
+                'author_id' => $request->author_id,
+                'title' => $request->title,
+                'description' => $request->description,
+                'image' => Storage::disk('public')->url($image_uploaded_path)
+            ]);
+
+            if (!$book) {
+                return $this->sendError("", "failed create book");
+            }
+            
+        } else {
+            $book = Book::create([
+                'author_id' => $request->author_id,
+                'title' => $request->title,
+                'description' => $request->description,
+                'image' => 'default.jpg'
+            ]);
+
+            if (!$book) {
+                return $this->sendError("", "failed create book");
+            }
+        }
 
         return $this->sendResponse($book, "success create book");
     }
@@ -54,11 +78,15 @@ class BookController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Book $book)
+    public function show($id)
     {   
-        $Book = Book::where('id', $book->id)->with('author')->first();
+        $book = Book::where('id', $id)->with('author')->first();
 
-        return $this->sendResponse($book, "Success get book with id = ".$Book->id);
+        if (!$book) {
+            return $this->sendError("", "book with id = ".$id." not found");
+        }
+
+        return $this->sendResponse($book, "Success get book with id = ".$book->id);
     }
 
     /**
@@ -79,8 +107,12 @@ class BookController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Book $book)
+    public function update(Request $request, $id)
     {
+        $book = Book::find($id);
+        if (!$book) {
+            return $this->sendError("", "book with id = ".$id." not found");
+        }
         $book->update([
             'author_id' => $request->author_id,
             'title' => $request->title,
@@ -96,8 +128,12 @@ class BookController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Book $book)
-    {
+    public function destroy($id)
+    {   
+        $book = Book::find($id);
+        if (!$book) {
+            return $this->sendError("", "book with id = ".$id." not found");
+        }
         $book->delete();
 
         return $this->sendResponse("", "Success delete book with id = ".$book->id);

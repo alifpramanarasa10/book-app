@@ -19,9 +19,11 @@ Route::post('/login', [App\Http\Controllers\Api\AuthController::class, 'login'])
 Route::get('email/verify/{id}', [App\Http\Controllers\Api\AuthController::class, 'verify'])->name('verification.verify');
 Route::post('email/resend', [App\Http\Controllers\Api\AuthController::class, 'resend'])->name('verification.resend');
 
-Route::group(['middleware' => ['auth:sanctum','isAdmin']], function(){
 
-    Route::apiResource('/book', App\Http\Controllers\Api\BookController::class);
+Route::apiResource('/book', App\Http\Controllers\Api\BookController::class);
+
+Route::group(['middleware' => ['auth:sanctum']], function(){
+
     Route::apiResource('/author', App\Http\Controllers\Api\AuthorController::class);
   
     Route::post('/logout', [App\Http\Controllers\Api\AuthController::class, 'logout']);
