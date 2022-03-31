@@ -14,12 +14,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::post('/register', [App\Http\Controllers\Api\AuthController::class, 'register']);
-Route::post('/login', [App\Http\Controllers\Api\AuthController::class, 'login']);
+Route::post('/login', [App\Http\Controllers\Api\AuthController::class, 'login'])->middleware('gateway');
 
 Route::get('email/verify/{id}', [App\Http\Controllers\Api\AuthController::class, 'verify'])->name('verification.verify');
 Route::post('email/resend', [App\Http\Controllers\Api\AuthController::class, 'resend'])->name('verification.resend');
 
-Route::group(['middleware' => ['auth:sanctum','verified']], function(){
+Route::group(['middleware' => ['auth:sanctum','isAdmin']], function(){
 
     Route::apiResource('/book', App\Http\Controllers\Api\BookController::class);
     Route::apiResource('/author', App\Http\Controllers\Api\AuthorController::class);
